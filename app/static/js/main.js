@@ -1,48 +1,40 @@
 // Main JavaScript for Weather Dashboard
-console.log('Weather Dashboard JavaScript loaded');
-
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM fully loaded');
-    
     // Initialize elements
     const weatherForm = document.getElementById('weatherForm');
     const cityInput = document.getElementById('cityInput');
     const currentWeather = document.getElementById('currentWeather');
+    const forecastContainer = document.getElementById('forecastContainer');
     const errorMessage = document.getElementById('errorMessage');
     const weatherHistory = document.getElementById('weatherHistory');
     const noHistory = document.getElementById('noHistory');
     const loadingSpinner = document.getElementById('loadingSpinner');
-    
-    // Debug: Log element status
-    console.log('Form element:', weatherForm ? 'Found' : 'Not found');
-    console.log('City input:', cityInput ? 'Found' : 'Not found');
-    console.log('Current weather div:', currentWeather ? 'Found' : 'Not found');
-    console.log('Error message div:', errorMessage ? 'Found' : 'Not found');
-    console.log('Weather history div:', weatherHistory ? 'Found' : 'Not found');
+    let currentLocation = '';
 
-    // Load weather history on page load
+    // Load weather history and initial forecast on page load
     loadWeatherHistory();
+    
+    // If there's a default location in the input field, fetch its weather
+    if (cityInput && cityInput.value.trim()) {
+        const location = cityInput.value.trim();
+        const isZipCode = /^\d{5}(-\d{4})?$/.test(location);
+        fetchWeather(location);
+        fetchForecast(location, isZipCode);
+    }
 
     // Handle form submission
     if (weatherForm) {
-        console.log('Adding form submit event listener');
         weatherForm.addEventListener('submit', function(e) {
-            console.log('Form submitted');
             e.preventDefault();
             const location = cityInput ? cityInput.value.trim() : '';
-            console.log('Location input value:', location);
             
             if (!location) {
-                console.error('No location entered');
                 showError('Please enter a city name or ZIP code');
                 return;
             }
             
-            console.log('Fetching weather for location:', location);
             fetchWeather(location);
         });
-    } else {
-        console.error('Weather form not found in the DOM');
     }
 
     // Fetch weather data from the API
@@ -56,13 +48,9 @@ document.addEventListener('DOMContentLoaded', function() {
             `/api/weather?zip=${encodeURIComponent(location)}` : 
             `/api/weather?city=${encodeURIComponent(location)}`;
         
-        console.log(`Fetching weather from: ${endpoint}`);
-        
         try {
             const response = await fetch(endpoint);
             const data = await response.json();
-            
-            console.log('API Response:', data);
             
             if (!response.ok) {
                 const errorMsg = data.message || 'Failed to fetch weather data';
@@ -70,8 +58,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (data.status === 'success') {
+                currentLocation = location;
                 displayWeather(data.data);
                 loadWeatherHistory(); // Reload history after new search
+                
+                // Always fetch and show forecast data
+                fetchForecast(location, isZipCode);
             } else {
                 throw new Error(data.message || 'Failed to process weather data');
             }
@@ -80,6 +72,29 @@ document.addEventListener('DOMContentLoaded', function() {
             showError(`Error: ${error.message || 'Failed to fetch weather data. Please try again.'}`);
         } finally {
             showLoading(false);
+        }
+    }
+    
+    // Fetch forecast data from the API
+    async function fetchForecast(location, isZipCode) {
+        if (!location) return;
+        
+        const endpoint = isZipCode ? 
+            `/api/weather/forecast?zip=${encodeURIComponent(location)}` : 
+            `/api/weather/forecast?city=${encodeURIComponent(location)}`;
+            
+        try {
+            const response = await fetch(endpoint);
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                displayForecast(data.data);
+            } else {
+                throw new Error(data.message || 'Failed to load forecast data');
+            }
+        } catch (error) {
+            console.error('Error fetching forecast:', error);
+            // Don't show error to user for forecast failures
         }
     }
 
@@ -107,6 +122,65 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show weather card and hide error
         if (currentWeather) currentWeather.classList.remove('d-none');
         if (errorMessage) errorMessage.classList.add('d-none');
+    }
+    
+    // Display 5-day forecast data
+    function displayForecast(forecastData) {
+        if (!forecastData || !forecastData.length || !forecastContainer) return;
+        
+        // Clear previous forecast
+        forecastContainer.innerHTML = '';
+        
+        // Create forecast row
+        const row = document.createElement('div');
+        row.className = 'row g-3';
+        
+        // Process each day's forecast
+        forecastData.forEach(day => {
+            const date = new Date(day.date);
+            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+            const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            
+            const col = document.createElement('div');
+            col.className = 'col-6 col-md-4 col-lg-2 mb-3';
+            
+            col.innerHTML = `
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">${dayName}</h5>
+                        <p class="text-muted small mb-2">${monthDay}</p>
+                        ${day.icon ? `
+                            <img src="http://openweathermap.org/img/wn/${day.icon}@2x.png" 
+                                 alt="${day.description || ''}" 
+                                 class="img-fluid mb-2" 
+                                 style="width: 60px; height: 60px;">
+                        ` : ''}
+                        <p class="mb-1">${day.description || ''}</p>
+                        <div class="d-flex justify-content-around mt-2">
+                            <div>
+                                <span class="h5 text-primary">${Math.round(day.temp_max)}°</span>
+                                <small class="text-muted d-block">High</small>
+                            </div>
+                            <div>
+                                <span class="h5 text-secondary">${Math.round(day.temp_min)}°</span>
+                                <small class="text-muted d-block">Low</small>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <i class="bi bi-droplet"></i> ${day.humidity}%
+                        </div>
+                    </div>
+                </div>`;
+            
+            row.appendChild(col);
+        });
+        
+        forecastContainer.appendChild(row);
+    }
+
+    // Initialize forecast container
+    if (forecastContainer) {
+        forecastContainer.style.display = 'block';
     }
 
     // Show error message
@@ -210,6 +284,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="bi bi-search"></i> Get Weather';
             }
+        }
+        
+        // Also show/hide the main loading spinner
+        if (loadingSpinner) {
+            loadingSpinner.style.display = show ? 'block' : 'none';
         }
     }
 });
