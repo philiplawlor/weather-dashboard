@@ -120,3 +120,80 @@ def get_weather_history():
             'status': 'error',
             'message': 'Failed to fetch weather history'
         }), 500
+
+@main.route('/api/weather/forecast', methods=['GET'])
+def get_weather_forecast():
+    """API endpoint to get 5-day weather forecast"""
+    try:
+        city = request.args.get('city')
+        zip_code = request.args.get('zip')
+        country = request.args.get('country', 'US')  # Default to US for ZIP codes
+        
+        logger.debug(f"Forecast request args: {dict(request.args)}")
+        
+        if not (city or zip_code):
+            error_msg = "Either 'city' or 'zip' parameter is required for forecast"
+            logger.warning(error_msg)
+            return jsonify({
+                'status': 'error',
+                'message': error_msg,
+                'requested_params': dict(request.args)
+            }), 400
+        
+        location = f"ZIP: {zip_code}, Country: {country}" if zip_code else f"City: {city}, Country: {country}"
+        logger.info(f"Processing forecast request for {location}")
+        
+        weather_service = WeatherService()
+        
+        try:
+            if zip_code:
+                # Handle ZIP code forecast
+                logger.debug(f"Attempting ZIP code forecast for {zip_code}, {country}")
+                forecast_data = weather_service.get_forecast_by_zip(zip_code, country)
+            else:
+                # Handle city name forecast
+                logger.debug(f"Attempting city forecast for {city}, {country}")
+                forecast_data = weather_service.get_forecast_by_city(city, country)
+            
+            if forecast_data:
+                logger.info(f"Successfully retrieved forecast data for {location}")
+                return jsonify({
+                    'status': 'success',
+                    'data': forecast_data,
+                    'location': location
+                })
+            else:
+                error_msg = f"No forecast data found for {location}"
+                logger.error(error_msg)
+                return jsonify({
+                    'status': 'error',
+                    'message': error_msg,
+                    'requested_location': location,
+                    'suggestion': 'Please check the location and try again.'
+                }), 404
+                
+        except Exception as e:
+            error_msg = f"Error processing forecast request for {location}: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            return jsonify({
+                'status': 'error',
+                'message': 'An error occurred while processing your forecast request',
+                'details': str(e),
+                'requested_location': location
+            }), 500
+            
+    except ValueError as ve:
+        error_msg = f"Configuration error: {str(ve)}"
+        logger.error(error_msg)
+        return jsonify({
+            'status': 'error',
+            'message': error_msg
+        }), 500
+        
+    except Exception as e:
+        error_msg = f"Unexpected error in forecast endpoint: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': 'An unexpected error occurred while fetching forecast data'
+        }), 500

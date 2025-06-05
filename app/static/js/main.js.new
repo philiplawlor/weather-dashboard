@@ -9,18 +9,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const weatherHistory = document.getElementById('weatherHistory');
     const noHistory = document.getElementById('noHistory');
     const loadingSpinner = document.getElementById('loadingSpinner');
+    const forecastToggle = document.getElementById('forecastToggle');
     let currentLocation = '';
 
-    // Load weather history and initial forecast on page load
+    // Load weather history on page load
     loadWeatherHistory();
-    
-    // If there's a default location in the input field, fetch its weather
-    if (cityInput && cityInput.value.trim()) {
-        const location = cityInput.value.trim();
-        const isZipCode = /^\d{5}(-\d{4})?$/.test(location);
-        fetchWeather(location);
-        fetchForecast(location, isZipCode);
-    }
 
     // Handle form submission
     if (weatherForm) {
@@ -62,8 +55,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 displayWeather(data.data);
                 loadWeatherHistory(); // Reload history after new search
                 
-                // Always fetch and show forecast data
-                fetchForecast(location, isZipCode);
+                // Fetch forecast data
+                await fetchForecast(location, isZipCode);
             } else {
                 throw new Error(data.message || 'Failed to process weather data');
             }
@@ -122,6 +115,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show weather card and hide error
         if (currentWeather) currentWeather.classList.remove('d-none');
         if (errorMessage) errorMessage.classList.add('d-none');
+        
+        // Show forecast toggle
+        if (forecastToggle) {
+            forecastToggle.style.display = 'block';
+            forecastToggle.setAttribute('aria-expanded', 'false');
+        }
+        
+        // Hide forecast container by default
+        if (forecastContainer) {
+            forecastContainer.style.display = 'none';
+        }
     }
     
     // Display 5-day forecast data
@@ -130,6 +134,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Clear previous forecast
         forecastContainer.innerHTML = '';
+        
+        // Create forecast header
+        const forecastHeader = document.createElement('h4');
+        forecastHeader.className = 'mt-4 mb-3';
+        forecastHeader.textContent = '5-Day Forecast';
+        forecastContainer.appendChild(forecastHeader);
         
         // Create forecast row
         const row = document.createElement('div');
@@ -177,10 +187,22 @@ document.addEventListener('DOMContentLoaded', function() {
         
         forecastContainer.appendChild(row);
     }
-
-    // Initialize forecast container
-    if (forecastContainer) {
-        forecastContainer.style.display = 'block';
+    
+    // Toggle forecast visibility
+    if (forecastToggle && forecastContainer) {
+        forecastToggle.addEventListener('click', function() {
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+            forecastContainer.style.display = isExpanded ? 'none' : 'block';
+            this.setAttribute('aria-expanded', String(!isExpanded));
+            this.querySelector('span').textContent = isExpanded ? 'Show' : 'Hide';
+            this.querySelector('i').className = isExpanded ? 'bi bi-chevron-down' : 'bi bi-chevron-up';
+            
+            // If showing forecast and it's empty, try to load it
+            if (!isExpanded && currentLocation && forecastContainer.children.length === 0) {
+                const isZipCode = /^\d{5}(-\d{4})?$/.test(currentLocation);
+                fetchForecast(currentLocation, isZipCode);
+            }
+        });
     }
 
     // Show error message
@@ -203,8 +225,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 errorMessage.style.display = 'none';
             }, 5000);
-        } else {
-            console.error('Error message element not found');
         }
     }
 
