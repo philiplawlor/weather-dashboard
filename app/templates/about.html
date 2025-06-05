@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}About - Weather Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">About Weather Dashboard</h2>
+                </div>
+                <div class="card-body">
+                    <h3>Project Overview</h3>
+                    <p class="lead">
+                        This is a demo project showcasing how to create a weather dashboard using Flask and the OpenWeatherMap API.
+                        The application provides real-time weather information for locations worldwide.
+                    </p>
+
+                    <h3 class="mt-4">Features</h3>
+                    <ul>
+                        <li>Get current weather data from the OpenWeatherMap API</li>
+                        <li>Search for weather by city name or ZIP code</li>
+                        <li>View detailed weather information including temperature, humidity, and conditions</li>
+                        <li>Responsive design that works on desktop and mobile devices</li>
+                        <li>View recent search history</li>
+                        <li>Temperature display in Fahrenheit</li>
+                    </ul>
+
+                    <h3 class="mt-4">Tech Stack</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Backend</h5>
+                            <ul>
+                                <li>Python 3.8+</li>
+                                <li>Flask web framework</li>
+                                <li>SQLite database</li>
+                                <li>SQLAlchemy ORM</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Frontend</h5>
+                            <ul>
+                                <li>HTML5</li>
+                                <li>CSS3 with Bootstrap 5</li>
+                                <li>JavaScript (ES6+)</li>
+                                <li>AJAX for API calls</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5>APIs Used</h5>
+                            <ul>
+                                <li>OpenWeatherMap API for weather data</li>
+                                <li>OpenWeatherMap Icons for weather conditions</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3 class="mt-4">Version</h3>
+                    <p>Current Version: <strong>0.1.0</strong></p>
+                    <p>Release Date: <strong>June 5, 2025</strong></p>
+
+                    <div class="mt-4">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                            <i class="bi bi-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

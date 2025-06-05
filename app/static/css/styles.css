@@ -1,0 +1,93 @@
+/* Main Styles */
+body {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+/* Card Styling */
+.card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Weather Display */
+.weather-display {
+    padding: 2rem 0;
+}
+
+.weather-icon {
+    margin: 0 auto;
+    width: 100px;
+    height: 100px;
+}
+
+.temperature {
+    font-size: 4rem;
+    font-weight: 300;
+    line-height: 1;
+}
+
+.weather-details {
+    margin-top: 2rem;
+}
+
+.weather-detail {
+    padding: 1rem;
+    text-align: center;
+}
+
+.weather-detail i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #0d6efd;
+}
+
+/* Search Form */
+.search-form {
+    margin-bottom: 2rem;
+}
+
+.search-form .form-control {
+    border-radius: 50px;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.search-form .btn {
+    border-radius: 50px;
+    padding: 0.75rem 2rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .temperature {
+        font-size: 3rem;
+    }
+    
+    .weather-detail {
+        padding: 0.5rem;
+    }
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.weather-card {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Loading Spinner */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.25em;
+}
