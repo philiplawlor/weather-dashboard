@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- 🌊 Beach and tide information section
+  - Integration with StormGlass API for marine data
+  - Display of high and low tide times
+  - Water temperature, wave height, and swell period information
+  - Refresh button for updating marine data
 - GitHub repository setup and initial push
 - Comprehensive README with badges and project information
 - Detailed CHANGES.md for version history
@@ -17,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated documentation with installation and setup instructions
 - Improved error handling in run scripts
 - Enhanced UI with better navigation and GitHub link
+- Weather display now includes coordinates for beach data lookup
 
 ## [0.1.0] - 2025-06-05
 ### Added

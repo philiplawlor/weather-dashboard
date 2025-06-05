@@ -10,6 +10,11 @@ A responsive web application that displays real-time weather data from the OpenW
 
 - 🌍 Search weather by city name or ZIP code (US only)
 - 🌡️ Temperature display in Fahrenheit
+- 🌊 Beach and tide information including:
+  - Next high and low tide times
+  - Water temperature
+  - Wave height and direction
+  - Swell period and direction
 - 📱 Responsive design that works on all devices
 - 📊 View detailed weather information including:
   - Current conditions
@@ -52,10 +57,16 @@ A responsive web application that displays real-time weather data from the OpenW
 
 4. **Configure environment variables**
    - Copy `.env.example` to `.env`
-   - Add your OpenWeatherMap API key:
+   - Update the following variables in the `.env` file:
    ```env
-   OPENWEATHER_API_KEY=your_api_key_here
-   SECRET_KEY=your_secret_key_here
+   # Get from https://openweathermap.org/api
+   OPENWEATHER_API_KEY=your_openweather_api_key_here
+   
+   # Get from https://stormglass.io/
+   STORMGLASS_API_KEY=your_stormglass_api_key_here
+   
+   # Generate a secure random string
+   SECRET_KEY=your_secure_secret_key_here
    ```
 
 5. **Run the application**

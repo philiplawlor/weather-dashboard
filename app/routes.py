@@ -1,7 +1,10 @@
 import logging
 from flask import Blueprint, render_template, request, jsonify, current_app
 from .services.weather_service import WeatherService
+from .services.tide_service import TideService
 from .models import db, WeatherData
+from typing import Dict, Any, Optional
+import os
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -104,7 +107,51 @@ def get_weather():
             'message': 'An unexpected error occurred while fetching weather data'
         }), 500
 
-@main.route('/api/weather/history', methods=['GET'])
+@main.route('/api/beach')
+def get_beach_conditions():
+    """API endpoint to get beach conditions and tide information.
+    
+    Query Parameters:
+        lat (float): Latitude of the location (required)
+        lng (float): Longitude of the location (required)
+    """
+    try:
+        lat = request.args.get('lat', type=float)
+        lng = request.args.get('lng', type=float)
+        
+        if not all([lat, lng]):
+            return jsonify({
+                'status': 'error',
+                'message': 'Both lat and lng parameters are required'
+            }), 400
+            
+        tide_service = TideService()
+        beach_data = tide_service.get_combined_beach_forecast(lat, lng)
+        
+        if 'error' in beach_data.get('tides', {}) or 'error' in beach_data.get('conditions', {}):
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to fetch beach data. The service might not be properly configured.',
+                'details': {
+                    'tides_error': beach_data.get('tides', {}).get('error'),
+                    'conditions_error': beach_data.get('conditions', {}).get('error')
+                }
+            }), 503
+            
+        return jsonify({
+            'status': 'success',
+            'data': beach_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching beach conditions: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': 'An error occurred while fetching beach conditions',
+            'details': str(e)
+        }), 500
+
+@main.route('/api/weather/history')
 def get_weather_history():
     """API endpoint to get weather history"""
     try:
@@ -112,11 +159,13 @@ def get_weather_history():
         history = WeatherData.query.order_by(WeatherData.timestamp.desc()).limit(10).all()
         return jsonify({
             'status': 'success',
-            'data': [data.to_dict() for data in history]
+            'data': [{
+                'location': f"{item.city}, {item.country_code}",
+                'temperature': item.temperature,
+                'description': item.description,
+                'timestamp': item.timestamp.isoformat()
+            } for item in history]
         })
     except Exception as e:
-        current_app.logger.error(f"Error in get_weather_history: {str(e)}")
-        return jsonify({
-            'status': 'error',
-            'message': 'Failed to fetch weather history'
-        }), 500
+        logger.error(f"Error fetching weather history: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500

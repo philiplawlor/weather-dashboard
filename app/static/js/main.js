@@ -1,9 +1,5 @@
 // Main JavaScript for Weather Dashboard
-console.log('Weather Dashboard JavaScript loaded');
-
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM fully loaded');
-    
     // Initialize elements
     const weatherForm = document.getElementById('weatherForm');
     const cityInput = document.getElementById('cityInput');
@@ -12,6 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const weatherHistory = document.getElementById('weatherHistory');
     const noHistory = document.getElementById('noHistory');
     const loadingSpinner = document.getElementById('loadingSpinner');
+    const beachInfo = document.getElementById('beachInfo');
+    const refreshBeachData = document.getElementById('refreshBeachData');
+    
+    // Store current coordinates for tide data
+    let currentCoords = null;
     
     // Debug: Log element status
     console.log('Form element:', weatherForm ? 'Found' : 'Not found');
@@ -45,10 +46,88 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Weather form not found in the DOM');
     }
 
+    // Fetch beach and tide data
+    async function fetchBeachData(lat, lon) {
+        if (!lat || !lon) return;
+        
+        try {
+            const response = await fetch(`/api/beach?lat=${lat}&lng=${lon}`);
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                displayBeachData(data.data);
+            } else {
+                console.error('Error fetching beach data:', data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching beach data:', error);
+        }
+    }
+    
+    // Display beach and tide data
+    function displayBeachData(data) {
+        if (!data) return;
+        
+        const tideInfo = document.getElementById('tideInfo');
+        const waterTemp = document.getElementById('waterTemp');
+        const waveHeight = document.getElementById('waveHeight');
+        const swellPeriod = document.getElementById('swellPeriod');
+        
+        // Update tide information
+        if (data.tides && data.tides.data && data.tides.data.length > 0) {
+            const tides = data.tides.data;
+            let tideHtml = `
+                <div class="row justify-content-around">
+                    <div class="col-md-6">
+                        <div class="h6">Next High Tide</div>
+                        <div class="h4 text-primary">${formatTideTime(tides.find(t => t.type === 'high')?.time) || '--'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="h6">Next Low Tide</div>
+                        <div class="h4 text-primary">${formatTideTime(tides.find(t => t.type === 'low')?.time) || '--'}</div>
+                    </div>
+                </div>
+            `;
+            tideInfo.innerHTML = tideHtml;
+        }
+        
+        // Update beach conditions
+        if (data.conditions && data.conditions.hours && data.conditions.hours.length > 0) {
+            const latest = data.conditions.hours[0];
+            
+            if (latest.waterTemperature) {
+                waterTemp.textContent = `${Math.round(latest.waterTemperature.noaa * 1.8 + 32)}°F`;
+            }
+            
+            if (latest.waveHeight) {
+                waveHeight.textContent = `${latest.waveHeight.noaa.toFixed(1)} ft`;
+            }
+            
+            if (latest.swellPeriod) {
+                swellPeriod.textContent = `${latest.swellPeriod.noaa.toFixed(1)} s`;
+            }
+        }
+        
+        // Show the beach info section
+        beachInfo.classList.remove('d-none');
+    }
+    
+    // Format tide time
+    function formatTideTime(timestamp) {
+        if (!timestamp) return '--';
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
     // Fetch weather data from the API
     async function fetchWeather(location) {
         showLoading(true);
         showError(''); // Clear any previous errors
+        
+        // Hide beach info until new data is loaded
+        if (beachInfo) {
+            beachInfo.classList.add('d-none');
+        }
         
         // Check if the input is a ZIP code (US only for now)
         const isZipCode = /^\d{5}(-\d{4})?$/.test(location);
@@ -85,28 +164,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Display weather data
     function displayWeather(data) {
-        if (!data) return;
-        
-        // Update DOM elements
-        document.getElementById('location').textContent = data.location || 'N/A';
-        document.getElementById('temperature').innerHTML = data.temperature ? `${Math.round(data.temperature)}&deg;F` : 'N/A';
-        document.getElementById('weatherDescription').textContent = data.description || 'N/A';
-        document.getElementById('humidity').textContent = data.humidity ? `${data.humidity}%` : 'N/A';
-        document.getElementById('feelsLike').textContent = data.temperature ? `${Math.round(data.temperature)}°F` : 'N/A';
-        
-        // Set weather icon if available
-        const weatherIcon = document.getElementById('weatherIcon');
-        if (weatherIcon && data.icon) {
-            weatherIcon.src = `http://openweathermap.org/img/wn/${data.icon}@2x.png`;
-            weatherIcon.alt = data.description || 'Weather icon';
-            weatherIcon.style.display = 'block';
-        } else if (weatherIcon) {
-            weatherIcon.style.display = 'none';
+        if (!data || data.cod !== 200) {
+            showError('Unable to fetch weather data. Please try again.');
+            return;
         }
-
-        // Show weather card and hide error
-        if (currentWeather) currentWeather.classList.remove('d-none');
-        if (errorMessage) errorMessage.classList.add('d-none');
+        
+        // Update the UI with weather data
+        document.getElementById('location').textContent = `${data.name}, ${data.sys.country}`;
+        document.getElementById('temperature').textContent = `${Math.round(data.main.temp)}°F`;
+        document.getElementById('weatherDescription').textContent = data.weather[0].description;
+        document.getElementById('humidity').textContent = `${data.main.humidity}%`;
+        document.getElementById('feelsLike').textContent = `${Math.round(data.main.feels_like)}°F`;
+        
+        // Set weather icon
+        const iconCode = data.weather[0].icon;
+        const iconUrl = `http://openweathermap.org/img/wn/${iconCode}@2x.png`;
+        document.getElementById('weatherIcon').src = iconUrl;
+        
+        // Show the weather section and hide loading spinner
+        currentWeather.classList.remove('d-none');
+        showLoading(false);
+        
+        // Save to history
+        saveToHistory(data);
+        
+        // Store coordinates for beach data
+        currentCoords = {
+            lat: data.coord.lat,
+            lon: data.coord.lon
+        };
+        
+        // Fetch beach and tide data
+        fetchBeachData(data.coord.lat, data.coord.lon);
     }
 
     // Show error message
