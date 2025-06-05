@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- GitHub repository setup and initial push
+- Comprehensive README with badges and project information
+- Detailed CHANGES.md for version history
+- Run scripts for both Windows and Unix-based systems
+- About page with project information and GitHub link
+
+### Changed
+- Updated documentation with installation and setup instructions
+- Improved error handling in run scripts
+- Enhanced UI with better navigation and GitHub link
+
 ## [0.1.0] - 2025-06-05
 ### Added
 - Complete Flask application structure with blueprints
