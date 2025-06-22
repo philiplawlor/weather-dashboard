@@ -23,10 +23,37 @@ A responsive web application that displays real-time weather data from the OpenW
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.8+ (for local development)
+- Docker and Docker Compose (for containerized deployment)
 - OpenWeatherMap API key (get one at [OpenWeatherMap](https://openweathermap.org/api))
 
-### Installation
+### Running with Docker (Recommended)
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/philiplawlor/weather-dashboard.git
+   cd weather-dashboard
+   ```
+
+2. **Create a `.env` file**
+   ```bash
+   cp .env.example .env
+   ```
+   Then edit `.env` and add your OpenWeatherMap API key:
+   ```
+   OPENWEATHER_API_KEY=your_api_key_here
+   SECRET_KEY=your_secret_key_here
+   ```
+
+3. **Build and start the containers**
+   ```bash
+   docker-compose up --build
+   ```
+
+4. **Access the application**
+   Open your browser and go to: http://localhost:5000
+
+### Local Development Installation
 
 1. **Clone the repository**
    ```bash
