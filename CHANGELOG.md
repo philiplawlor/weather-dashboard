@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-06-22
+
+### Added
+- Dark mode toggle with user preference persistence
+- System preference detection for automatic theme selection
+- Smooth transitions between light and dark themes
+- Enhanced UI components for dark mode compatibility
+- CSS variables for consistent theming
+
+## [0.2.1] - 2025-06-22
+
 ### Added
 - Docker support with multi-stage builds
 - Docker Compose configuration for easy local development
