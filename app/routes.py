@@ -2,6 +2,7 @@ import logging
 from flask import Blueprint, render_template, request, jsonify, current_app
 from .services.weather_service import WeatherService
 from .models import db, WeatherData
+from sqlalchemy import text
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -17,6 +18,25 @@ def index():
 def about():
     """Render the about page"""
     return render_template('about.html')
+
+@main.route('/health')
+def health_check():
+    """Health check endpoint for Docker and load balancers"""
+    try:
+        # Check database connection
+        db.session.execute(text('SELECT 1'))
+        return jsonify({
+            'status': 'healthy',
+            'message': 'Service is running',
+            'database': 'connected'
+        }), 200
+    except Exception as e:
+        current_app.logger.error(f'Health check failed: {str(e)}')
+        return jsonify({
+            'status': 'unhealthy',
+            'message': str(e),
+            'database': 'connection failed'
+        }), 500
 
 @main.route('/api/weather', methods=['GET'])
 def get_weather():

@@ -12,6 +12,7 @@
 - [x] Implement weather data caching (v0.1.0)
 - [x] Add error handling for API requests (v0.1.0)
 - [x] Create responsive design (v0.1.0)
+- [x] Add Docker support and containerization (v0.2.0)
 - [ ] Add unit tests
 - [ ] Add integration tests
 
