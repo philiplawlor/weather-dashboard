@@ -62,51 +62,31 @@ def get_weather():
         
         weather_service = WeatherService()
         
-        try:
-            if zip_code:
-                # Handle ZIP code search
-                logger.debug(f"Attempting ZIP code lookup for {zip_code}, {country}")
-                weather_data = weather_service.get_weather_by_zip(zip_code, country)
-            else:
-                # Handle city name search
-                logger.debug(f"Attempting city lookup for {city}, {country}")
-                weather_data = weather_service.get_weather_by_city(city, country)
-            
-            if weather_data:
-                logger.info(f"Successfully retrieved weather data for {location}")
-                return jsonify({
-                    'status': 'success',
-                    'data': weather_data,
-                    'location': location
-                })
-            else:
-                error_msg = f"No weather data found for {location}"
-                logger.error(error_msg)
-                return jsonify({
-                    'status': 'error',
-                    'message': error_msg,
-                    'requested_location': location,
-                    'suggestion': 'Please check the location and try again.'
-                }), 404
-                
-        except Exception as e:
-            error_msg = f"Error processing weather request for {location}: {str(e)}"
-            logger.error(error_msg, exc_info=True)
+        if zip_code:
+            # Handle ZIP code search
+            logger.debug(f"Attempting ZIP code lookup for {zip_code}, {country}")
+            weather_data = weather_service.get_weather_by_zip(zip_code, country)
+        else:
+            # Handle city name search
+            logger.debug(f"Attempting city lookup for {city}, {country}")
+            weather_data = weather_service.get_weather_by_city(city, country)
+        
+        if weather_data:
+            logger.info(f"Successfully retrieved weather data for {location}")
+            return jsonify({
+                'status': 'success',
+                'data': weather_data,
+                'location': location
+            })
+        else:
+            error_msg = f"No weather data found for {location}"
+            logger.error(error_msg)
             return jsonify({
                 'status': 'error',
-                'message': 'An error occurred while processing your request',
-                'details': str(e),
-                'requested_location': location
-            }), 500
-            
-    except Exception as e:
-        error_msg = f"Unexpected error in weather endpoint: {str(e)}"
-        logger.error(error_msg, exc_info=True)
-        return jsonify({
-            'status': 'error',
-            'message': 'An unexpected error occurred',
-            'details': str(e)
-        }), 500
+                'message': error_msg,
+                'requested_location': location,
+                'suggestion': 'Please check the location and try again.'
+            }), 404
             
     except ValueError as ve:
         error_msg = f"Configuration error: {str(ve)}"
